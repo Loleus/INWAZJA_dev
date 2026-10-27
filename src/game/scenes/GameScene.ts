@@ -94,6 +94,8 @@ export class GameScene extends Phaser.Scene {
   private spawnQueue: SpawnEntry[] = [];
   private spawnCursor = 0;
   private enemiesAliveInWave = 0;
+  private waveGoldEarned = 0;
+  private pendingWaveComplete: Phaser.Time.TimerEvent | null = null;
 
   private selectedTowerType: TowerType | null = null;
   private selectedTower: Tower | null = null;
@@ -148,6 +150,11 @@ export class GameScene extends Phaser.Scene {
     this.spawnQueue = [];
     this.spawnCursor = 0;
     this.enemiesAliveInWave = 0;
+    this.waveGoldEarned = 0;
+    if (this.pendingWaveComplete) {
+      this.pendingWaveComplete.remove(false);
+      this.pendingWaveComplete = null;
+    }
     this.selectedTowerType = null;
     this.selectedTower = null;
     this.uiGuard = false;
@@ -491,7 +498,7 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     if (!this.canPlaceTower(col, row)) {
-      this.setStatus(t('cannotBuild'));
+      this.showBlocked(t('cannotBuild'));
       return;
     }
 
@@ -845,6 +852,11 @@ export class GameScene extends Phaser.Scene {
     const wave = this.waves[this.waveNumber];
     this.waveNumber++;
     this.waveActive = true;
+    this.waveGoldEarned = 0;
+    if (this.pendingWaveComplete) {
+      this.pendingWaveComplete.remove(false);
+      this.pendingWaveComplete = null;
+    }
 
     // Każda grupa ma własny czas startu, a liczebność dzielona jest po równo
     // na trzy drogi (rotacja A -> B -> C); `burst` wypuszcza kilka sztuk naraz.
@@ -902,12 +914,12 @@ export class GameScene extends Phaser.Scene {
         'danger',
       );
     } else {
-      this.setStatus(t('enemyInBase'), STATUS_HOLD.default, 'danger');
+      this.setStatus(t('enemyInBase', { dmg: enemy.damage }), STATUS_HOLD.default, 'danger');
     }
     this.cameras.main.shake(FX.shake.base.ms, FX.shake.base.intensity);
     this.refreshHud();
     if (this.lives <= 0) this.endGame(false);
-    else this.checkWaveComplete();
+    else this.checkWaveComplete(STATUS_HOLD.default);
   }
 
   /* ------------------------------- wieże i pociski ------------------------------- */
@@ -1246,6 +1258,7 @@ export class GameScene extends Phaser.Scene {
     this.score += points;
     this.gold += enemy.config.gold;
     this.goldEarned += enemy.config.gold;
+    this.waveGoldEarned += enemy.config.gold;
     this.enemiesAliveInWave--;
     gameAudio.enemyDeath(enemy.config.type);
     const style = ENEMY_STYLE[enemy.config.type];
@@ -1273,14 +1286,28 @@ export class GameScene extends Phaser.Scene {
     this.checkWaveComplete();
   }
 
-  private checkWaveComplete() {
+  private checkWaveComplete(delayMs = 0) {
     if (this.gameEnded || !this.waveActive) return;
     if (this.spawnCursor < this.spawnQueue.length || this.enemiesAliveInWave > 0) return;
+    if (delayMs > 0) {
+      if (this.pendingWaveComplete) return;
+      this.pendingWaveComplete = this.time.delayedCall(delayMs, () => {
+        this.pendingWaveComplete = null;
+        this.checkWaveComplete();
+      });
+      return;
+    }
+
     const wave = this.waves[this.waveNumber - 1];
+    this.waveGoldEarned += wave.bonus;
     this.gold += wave.bonus;
     this.goldEarned += wave.bonus;
     this.waveActive = false;
-    this.setStatus(t('waveDone', { n: this.waveNumber, bonus: wave.bonus }));
+    this.setStatus(
+      t('waveDone', { n: this.waveNumber, bonus: wave.bonus }),
+      STATUS_HOLD.default,
+      this.waveGoldEarned <= 0 ? 'danger' : 'default',
+    );
     this.refreshHud();
     this.refreshTowerButtons();
     if (this.waveNumber >= this.waves.length) {
