@@ -1,0 +1,35 @@
+{
+  "name": "react-vite-tailwind",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:pwa": "node scripts/build.mjs pwa",
+    "build:yandex": "node scripts/build.mjs yandex",
+    "build:itch": "node scripts/build.mjs itch",
+    "build:crazygames": "node scripts/build.mjs crazygames",
+    "build:poki": "node scripts/build.mjs poki",
+    "build:portals": "node scripts/build.mjs portals",
+    "build:all": "npm run build && node scripts/build.mjs all"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.1.17",
+    "@types/node": "22.19.17",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.1.1",
+    "fflate": "^0.8.3",
+    "tailwindcss": "4.1.17",
+    "typescript": "5.9.3",
+    "vite": "^7.3.7",
+    "vite-plugin-singlefile": "2.3.0"
+  }
+}
