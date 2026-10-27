@@ -88,6 +88,7 @@ const DICT = {
     bossKilled: 'BOSS pokonany · +{gold} 🪙 · +{points} pkt',
     megaKilled: 'MEGA BOSS pokonany · +{gold} 🪙 · +{points} pkt',
     bossInBase: '{boss} w bazie: -{dmg} życia',
+    enemyInBase: 'WRÓG W BAZIE',
     // podpowiedź po najechaniu na wieżę
     hoverLevel: 'poziom',
     hoverEvery: 'co',
@@ -158,6 +159,7 @@ const DICT = {
     bossKilled: 'BOSS defeated · +{gold} 🪙 · +{points} pts',
     megaKilled: 'MEGA BOSS defeated · +{gold} 🪙 · +{points} pts',
     bossInBase: '{boss} reached the base: -{dmg} lives',
+    enemyInBase: 'ENEMY IN THE BASE',
     hoverLevel: 'level',
     hoverEvery: 'shot every',
     hoverUpgrade: 'upgrade: {cost} 🪙 (click or U)',

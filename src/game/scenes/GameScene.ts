@@ -898,7 +898,11 @@ export class GameScene extends Phaser.Scene {
     if (isBossType(enemy.config.type)) {
       this.setStatus(
         t('bossInBase', { boss: enemy.config.type === 'megaboss' ? 'MEGA BOSS' : 'BOSS', dmg: enemy.damage }),
+        STATUS_HOLD.default,
+        'danger',
       );
+    } else {
+      this.setStatus(t('enemyInBase'), STATUS_HOLD.default, 'danger');
     }
     this.cameras.main.shake(FX.shake.base.ms, FX.shake.base.intensity);
     this.refreshHud();
