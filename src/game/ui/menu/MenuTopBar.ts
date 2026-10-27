@@ -18,7 +18,7 @@ export function buildMenuTopBar(scene: Phaser.Scene) {
     gameAudio.uiClick();
     toggleFullscreen(scene);
   });
-  addGlyph(scene, TOP_BAR.fullscreenX, TOP_BAR_CY, '⤢', FONT_SIZE.hudGlyph);
+  addGlyph(scene, TOP_BAR.fullscreenX, TOP_BAR_CY, '⧉', FONT_SIZE.hudGlyph);
 }
 
 /**
@@ -41,9 +41,9 @@ function buildAudioToggle(scene: Phaser.Scene) {
   addNeutralButton(scene, x, TOP_BAR_CY, TOP_BAR.button.w, TOP_BAR.button.h, () => {
     const enabled = gameAudio.toggle();
     paint(enabled);
-    gameAudio.uiClick();
+    if (enabled) gameAudio.uiClick();
   });
-  glyph = addGlyph(scene, x, TOP_BAR_CY, '♪', FONT_SIZE.hudGlyph);
+  glyph = addGlyph(scene, x, TOP_BAR_CY, '🕪', FONT_SIZE.hudGlyph);
   paint(gameAudio.isEnabled());
   /* Silnik może odmówić (brak WebAudio) — wtedy stan ikony zostaje zgodny z rzeczywistością. */
   const unsubscribe = gameAudio.onChange(paint);
