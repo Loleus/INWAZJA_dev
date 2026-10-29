@@ -104,7 +104,7 @@ export const SOUNDS: Record<SoundId, SoundDef> = {
   },
   'ui-wave': {
     id: 'ui-wave',
-    volume: 0.2,
+    volume: 0.35,
     minGapMs: 250,
     fallback: { kind: 'arp', notes: [392, 523, 659], stepMs: 95, ms: 380, wave: 'triangle' },
   },
@@ -138,19 +138,19 @@ export const SOUNDS: Record<SoundId, SoundDef> = {
   /* ----------------------------------- wieże ----------------------------------- */
   'tower-place': {
     id: 'tower-place',
-    volume: 0.6,
+    volume: 0.4,
     minGapMs: 60,
     fallback: { kind: 'thump', freq: 170, endFreq: 60, ms: 220, noise: 0.25 },
   },
   'tower-upgrade-1': {
     id: 'tower-upgrade-1',
-    volume: 0.2,
+    volume: 0.15,
     minGapMs: 120,
     fallback: { kind: 'arp', notes: [620, 930], stepMs: 85, ms: 320, wave: 'triangle' },
   },
   'tower-upgrade-2': {
     id: 'tower-upgrade-2',
-    volume: 0.2,
+    volume: 0.15,
     minGapMs: 120,
     fallback: { kind: 'arp', notes: [700, 1050, 1400], stepMs: 80, ms: 380, wave: 'triangle' },
   },
@@ -170,13 +170,13 @@ export const SOUNDS: Record<SoundId, SoundDef> = {
   },
   'shot-frost': {
     id: 'shot-frost',
-    volume: 0.32,
+    volume: 0.15,
     minGapMs: 55,
     fallback: { kind: 'tone', freq: 1500, endFreq: 2200, ms: 140, wave: 'sine' },
   },
   'shot-lightning': {
     id: 'shot-lightning',
-    volume: 0.34,
+    volume: 0.15,
     minGapMs: 55,
     fallback: { kind: 'noise', ms: 130, noise: 1 },
   },
@@ -184,19 +184,19 @@ export const SOUNDS: Record<SoundId, SoundDef> = {
   /* ---------------------------------- wybuchy ---------------------------------- */
   'explosion-enemy': {
     id: 'explosion-enemy',
-    volume: 0.1,
+    volume: 0.2,
     minGapMs: 55,
     fallback: { kind: 'noise', ms: 320, noise: 1, freq: 420 },
   },
   'explosion-boss': {
     id: 'explosion-boss',
-    volume: 0.6,
+    volume: 0.25,
     minGapMs: 150,
     fallback: { kind: 'thump', freq: 110, endFreq: 32, ms: 650, noise: 0.7 },
   },
   'explosion-megaboss': {
     id: 'explosion-megaboss',
-    volume: 0.7,
+    volume: 0.3,
     minGapMs: 300,
     fallback: { kind: 'thump', freq: 82, endFreq: 24, ms: 1000, noise: 0.85 },
   },
@@ -206,7 +206,7 @@ export const SOUNDS: Record<SoundId, SoundDef> = {
      w AudioEngine.baseHit(), więc jeden sample obsługuje całą skalę zagrożenia. */
   'base-hit': {
     id: 'base-hit',
-    volume: 0.62,
+    volume: 0.2,
     minGapMs: 140,
     fallback: { kind: 'thump', freq: 240, endFreq: 42, ms: 480, noise: 0.45 },
   },
@@ -246,7 +246,7 @@ export const SOUNDS: Record<SoundId, SoundDef> = {
   /* ---------------------------------- muzyka ---------------------------------- */
   'music-game': {
     id: 'music-game',
-    volume: 0.32,
+    volume: 0.2,
     loop: true,
     fallback: { kind: 'engine', freq: 110, ms: 4000, wave: 'triangle' },
   },
