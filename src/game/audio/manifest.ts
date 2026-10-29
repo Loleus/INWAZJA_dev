@@ -104,7 +104,7 @@ export const SOUNDS: Record<SoundId, SoundDef> = {
   },
   'ui-wave': {
     id: 'ui-wave',
-    volume: 0.55,
+    volume: 0.2,
     minGapMs: 250,
     fallback: { kind: 'arp', notes: [392, 523, 659], stepMs: 95, ms: 380, wave: 'triangle' },
   },
@@ -144,13 +144,13 @@ export const SOUNDS: Record<SoundId, SoundDef> = {
   },
   'tower-upgrade-1': {
     id: 'tower-upgrade-1',
-    volume: 0.5,
+    volume: 0.2,
     minGapMs: 120,
     fallback: { kind: 'arp', notes: [620, 930], stepMs: 85, ms: 320, wave: 'triangle' },
   },
   'tower-upgrade-2': {
     id: 'tower-upgrade-2',
-    volume: 0.55,
+    volume: 0.2,
     minGapMs: 120,
     fallback: { kind: 'arp', notes: [700, 1050, 1400], stepMs: 80, ms: 380, wave: 'triangle' },
   },
@@ -184,7 +184,7 @@ export const SOUNDS: Record<SoundId, SoundDef> = {
   /* ---------------------------------- wybuchy ---------------------------------- */
   'explosion-enemy': {
     id: 'explosion-enemy',
-    volume: 0.45,
+    volume: 0.1,
     minGapMs: 55,
     fallback: { kind: 'noise', ms: 320, noise: 1, freq: 420 },
   },

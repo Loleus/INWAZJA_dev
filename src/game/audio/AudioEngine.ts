@@ -94,6 +94,7 @@ export class AudioEngine {
   private fallbacks = new Map<SoundId, AudioBuffer>();
   private failed = new Set<SoundId>();
   private loading = new Map<SoundId, Promise<AudioBuffer | null>>();
+  private pendingPlays = new Map<SoundId, PlayOptions>();
   private preloadQueue: SoundId[] = [];
   private preloadActive = 0;
   private lastPlayedAt = new Map<SoundId, number>();
@@ -155,6 +156,7 @@ export class AudioEngine {
       this.preload();
       this.syncLoops();
     } else {
+      this.pendingPlays.clear();
       this.setMaster(0);
       this.stopAllLoops();
     }
@@ -302,10 +304,29 @@ export class AudioEngine {
     if (def.minGapMs && now - last < def.minGapMs) return;
     this.lastPlayedAt.set(id, now);
 
-    const buffer = this.buffers.get(id) ?? this.fallbackBuffer(id);
-    // Plik jeszcze się wczytuje: gramy krótki fallback, a prawdziwe nagranie dociągamy w tle.
-    if (!this.buffers.has(id) && !this.failed.has(id)) this.requestLoad(id);
+    const buffer = this.buffers.get(id);
+    if (!buffer && !this.failed.has(id)) {
+      // Nie zastępujemy sampla syntezatorem podczas ładowania. Odtwarzamy ostatnie
+      // żądanie po zakończeniu pobierania albo używamy fallbacku dopiero po błędzie.
+      this.pendingPlays.set(id, options);
+      void this.loadBuffer(id).then((loaded) => {
+        const pending = this.pendingPlays.get(id);
+        if (!pending) return;
+        this.pendingPlays.delete(id);
+        const ready = loaded ?? this.fallbackBuffer(id);
+        if (this.enabled && ready) this.playBuffer(id, ready, pending);
+      });
+      return;
+    }
+    this.playBuffer(id, buffer ?? this.fallbackBuffer(id), options);
+  }
+
+  private playBuffer(id: SoundId, buffer: AudioBuffer | null, options: PlayOptions) {
     if (!buffer) return;
+    const def = SOUNDS[id];
+    const ctx = this.ctx ?? this.ensureContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') void ctx.resume().catch(() => undefined);
     if (this.oneShots >= MAX_VOICES) return;
 
     try {

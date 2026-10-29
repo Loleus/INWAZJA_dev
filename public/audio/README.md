@@ -39,8 +39,11 @@ w funkcji `audioFile()` w `src/game/audio/manifest.ts`.
   pierwszego do śmierci/zniknięcia ostatniego.
 - **Pitch i głośność**: wystrzały i ulepszenia skalują się poziomem wieży; zwykłe wybuchy losują
   lekki pitch/gain; bossy mają stały, dedykowany sample.
-- **Brak pliku nie zatrzymuje gry** — silnik gra krótki, syntezowany fallback zdefiniowany
-  przy każdym dźwięku w `manifest.ts`, a prawdziwy plik doładowuje w tle.
+- **Sample ma pierwszeństwo** — silnik czeka na zakończenie ładowania pliku zamiast od razu
+  grać syntezator. Fallback z `manifest.ts` jest używany dopiero, gdy plik jest niedostępny
+  albo nie da się go odkodować.
+- **PWA buforuje sample lokalnie** — service worker zapisuje pliki audio w cache podczas
+  instalacji, odczytuje je z cache w pierwszej kolejności, a przy braku kopii pobiera z sieci.
 - **Dźwięk domyślnie wyłączony** — włącznik w menu (ikona nuty obok pełnego ekranu) jest gestem
   zezwalającym przeglądarce na AudioContext; stan zapisuje się w `localStorage`.
 - Zmiana nazw plików: `src/game/audio/manifest.ts`. Ponowne wygenerowanie tymczasowych dźwięków:
