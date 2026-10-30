@@ -399,9 +399,9 @@ export const TOWER_STATS: Record<TowerType, TowerLevelStats[]> = {
     { damage: 38, range: 150, fireRate: 850, slow: 0, slowDuration: 0, chain: 0, chainDamage: [], cost: 0, upgradeCost: 0 },
   ],
   frost: [
-    { damage: 0, range: 120, fireRate: 800, slow: 0.35, slowDuration: 2000, chain: 0, chainDamage: [], cost: 120, upgradeCost: 50 },
-    { damage: 0, range: 140, fireRate: 700, slow: 0.4, slowDuration: 2500, chain: 0, chainDamage: [], cost: 0, upgradeCost: 85 },
-    { damage: 0, range: 160, fireRate: 600, slow: 0.45, slowDuration: 3000, chain: 0, chainDamage: [], cost: 0, upgradeCost: 0 },
+    { damage: 0, range: 120, fireRate: 1400, slow: 0.35, slowDuration: 2000, chain: 0, chainDamage: [], cost: 120, upgradeCost: 50 },
+    { damage: 0, range: 140, fireRate: 1000, slow: 0.4, slowDuration: 2500, chain: 0, chainDamage: [], cost: 0, upgradeCost: 85 },
+    { damage: 0, range: 160, fireRate: 800, slow: 0.45, slowDuration: 3000, chain: 0, chainDamage: [], cost: 0, upgradeCost: 0 },
   ],
   lightning: [
     { damage: 25, range: 140, fireRate: 1000, slow: 0, slowDuration: 0, chain: 3, chainDamage: [25, 10, 5], cost: 150, upgradeCost: 90 },

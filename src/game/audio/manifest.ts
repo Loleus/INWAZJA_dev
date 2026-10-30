@@ -124,13 +124,13 @@ export const SOUNDS: Record<SoundId, SoundDef> = {
   },
   'ui-victory': {
     id: 'ui-victory',
-    volume: 0.6,
+    volume: 0.1,
     minGapMs: 500,
     fallback: { kind: 'arp', notes: [523, 659, 784, 1047], stepMs: 150, ms: 1200, wave: 'triangle' },
   },
   'ui-defeat': {
     id: 'ui-defeat',
-    volume: 0.6,
+    volume: 0.1,
     minGapMs: 500,
     fallback: { kind: 'arp', notes: [392, 330, 262, 196], stepMs: 200, ms: 1100, wave: 'sawtooth' },
   },
@@ -158,25 +158,25 @@ export const SOUNDS: Record<SoundId, SoundDef> = {
   /* ---------------------------------- wystrzały ---------------------------------- */
   'shot-arrow': {
     id: 'shot-arrow',
-    volume: 0.34,
+    volume: 0.3,
     minGapMs: 45,
     fallback: { kind: 'tone', freq: 1250, endFreq: 760, ms: 80, wave: 'triangle' },
   },
   'shot-cannon': {
     id: 'shot-cannon',
-    volume: 0.34,
+    volume: 0.45,
     minGapMs: 70,
     fallback: { kind: 'thump', freq: 150, endFreq: 45, ms: 200, noise: 0.5 },
   },
   'shot-frost': {
     id: 'shot-frost',
-    volume: 0.1,
+    volume: 0.25,
     minGapMs: 55,
     fallback: { kind: 'tone', freq: 1500, endFreq: 2200, ms: 140, wave: 'sine' },
   },
   'shot-lightning': {
     id: 'shot-lightning',
-    volume: 0.15,
+    volume: 0.4,
     minGapMs: 55,
     fallback: { kind: 'noise', ms: 130, noise: 1 },
   },

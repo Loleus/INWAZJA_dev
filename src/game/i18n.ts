@@ -46,11 +46,11 @@ const DICT = {
     // menu
     title: 'INWAZJA',
     weaponsHeader: 'ARSENAŁ',
-    enemiesHeader: 'PRZECIWNICY',
+    enemiesHeader: 'WRÓG',
     range: 'zasięg',
     startButton: 'ROZPOCZNIJ OBRONĘ',
     // wieże
-    towerArrow: 'Strzała',
+    towerArrow: 'Karabin',
     towerCannon: 'Armata',
     towerFrost: 'Mróz',
     towerLightning: 'Błyskawica',
@@ -59,7 +59,7 @@ const DICT = {
     effectFrost: 'spowalnia wroga',
     effectLightning: 'łańcuch 3 · bez czołgów',
     // wrogowie
-    enemyBasic: 'PODSTAWOWY',
+    enemyBasic: 'PROSTY',
     enemyFast: 'SZYBKI',
     enemyTank: 'CZOŁG',
     enemyBoss: 'BOSS',
@@ -120,10 +120,10 @@ const DICT = {
   en: {
     title: 'INVASION',
     weaponsHeader: 'ARSENAL',
-    enemiesHeader: 'ENEMIES',
+    enemiesHeader: 'ENEMY',
     range: 'range',
     startButton: 'START DEFENSE',
-    towerArrow: 'Arrow',
+    towerArrow: 'Gun',
     towerCannon: 'Cannon',
     towerFrost: 'Frost',
     towerLightning: 'Lightning',
