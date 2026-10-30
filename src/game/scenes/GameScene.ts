@@ -183,7 +183,10 @@ export class GameScene extends Phaser.Scene {
         this.uiGuard = true;
       },
       upgrade: () => this.upgradeSelected(),
-      sell: () => this.sellSelected(),
+      sell: () => {
+        gameAudio.sellTower();
+        this.sellSelected();
+      },
       close: () => this.closeInfoPanel(),
     });
 
@@ -485,6 +488,7 @@ export class GameScene extends Phaser.Scene {
 
     const existing = this.gridTowers[col]?.[row];
     if (existing) {
+      gameAudio.towerSelect();
       this.openInfoPanel(existing);
       return;
     }

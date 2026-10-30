@@ -368,6 +368,10 @@ export class AudioEngine {
     this.play('ui-select');
   }
 
+  sellTower() {
+    this.play('ui-defeat');
+  }
+
   wave() {
     this.play('ui-wave');
   }

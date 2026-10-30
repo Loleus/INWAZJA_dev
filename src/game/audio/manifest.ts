@@ -130,7 +130,7 @@ export const SOUNDS: Record<SoundId, SoundDef> = {
   },
   'ui-defeat': {
     id: 'ui-defeat',
-    volume: 0.1,
+    volume: 0.08,
     minGapMs: 500,
     fallback: { kind: 'arp', notes: [392, 330, 262, 196], stepMs: 200, ms: 1100, wave: 'sawtooth' },
   },
