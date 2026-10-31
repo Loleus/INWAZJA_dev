@@ -55,6 +55,8 @@ import {
   isPath,
   laneEntryArrowAt,
   onBoard,
+  PATHS,
+  pathLengthToBase,
   pointerCell,
   pointerOnBoard,
 } from '../logic/board';
@@ -66,6 +68,9 @@ import { toggleFullscreen } from '../ui/common';
 import { GameBottomBar } from '../ui/game/GameBottomBar';
 import { GameTopBar } from '../ui/game/GameTopBar';
 import { TowerInfoPanel } from '../ui/game/TowerInfoPanel';
+
+const SHORTEST_PATH_LEN = Math.min(...PATHS.map(pathLengthToBase));
+const CLIMAX_DISTANCE = SHORTEST_PATH_LEN / 2;
 
 /* =========================================================================================
    Scena gry: pasek górny (liczniki, PROMPTER z przyciskiem FALA, sterowanie), plansza 32×24
@@ -862,21 +867,36 @@ export class GameScene extends Phaser.Scene {
       this.pendingWaveComplete = null;
     }
 
-    // Każda grupa ma własny czas startu, a liczebność dzielona jest po równo
-    // na trzy drogi (rotacja A -> B -> C); `burst` wypuszcza kilka sztuk naraz.
+    // Grupy wypuszczają po jednym wrogu w swoich równych odstępach, rotując po drogach.
     this.spawnQueue = [];
     this.spawnCursor = 0;
     let total = 0;
     const start = this.clock + TIMING.waveStartDelay;
     let laneCursor = 0;
-    for (const group of wave.groups) {
-      const batchStep = Math.max(TIMING.minBatchStep, group.interval * group.burst);
+    const scheduledGroups = wave.groups.map((group) => {
+      const interval = Math.max(TIMING.minBatchStep, group.interval * group.burst);
+      const spawnWindow = Math.floor((group.count - 1) / group.burst) * interval;
+      return { group, interval, spawnWindow };
+    });
+    const climaxArrival = Math.max(
+      ...scheduledGroups.map(({ group, spawnWindow }) => {
+        const groupTravelTime = CLIMAX_DISTANCE / group.config.speed;
+        return group.delay + spawnWindow + groupTravelTime * 1000;
+      }),
+    );
+    for (const { group, interval, spawnWindow } of scheduledGroups) {
+      const climaxTravelTime = (CLIMAX_DISTANCE / group.config.speed) * 1000;
+      const groupStart = climaxArrival - spawnWindow - climaxTravelTime;
       for (let i = 0; i < group.count; i++) {
         const lane = LANES[(laneCursor + i) % LANES.length];
+        const path = getPathById(lane);
         this.spawnQueue.push({
-          config: group.config,
+          config: {
+            ...group.config,
+            speed: (group.config.speed * pathLengthToBase(path)) / SHORTEST_PATH_LEN,
+          },
           pathId: lane,
-          at: start + group.delay + Math.floor(i / group.burst) * batchStep,
+          at: start + groupStart + Math.floor(i / group.burst) * interval,
         });
       }
       laneCursor = (laneCursor + group.count) % LANES.length;

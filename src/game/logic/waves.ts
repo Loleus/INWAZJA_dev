@@ -4,28 +4,31 @@
    - HP każdego typu rośnie do końca gry, bez pułapów,
    - fala wypłaca dokładnie `waveIncome(w)` złota,
    - co 10 fal boss prowadzący wchodzi na czele kolumny; na 50. fali MEGA BOSS,
-   - od fali 42 (finał) wyłącznie czołgi i bossowie.
-   Grupy startują równolegle i wypuszczają wrogów seriami (burst), więc fale się mieszają.
+   - wszystkie typy wrogów pozostają w składzie aż do końca.
+   Grupy wypuszczają pojedynczych wrogów w równych odstępach.
    ========================================================================================= */
 import {
   BALANCE,
   DAMAGE_BY_TYPE,
+  DAMAGE_MULT,
   ENEMY_ORDER,
   ENEMY_SPEED,
   ENEMY_VIEW,
+  EFFECTIVENESS,
   GOLD_WEIGHT,
   START_GOLD,
   TOTAL_WAVES,
+  TOWER_ORDER,
+  TOWER_STATS,
   WAVE,
-  WAVE_SHARE_ANCHORS,
 } from '../constants';
 import type { EnemyType, MenuEnemy, Wave, WaveGroup } from '../types';
-import { PATHS } from './board';
+import { PATHS, pathLengthToBase } from './board';
 
 type Shares = { basic: number; fast: number; tank: number; boss: number };
 type GroupType = keyof typeof WAVE.groups;
 
-const AVG_PATH_LEN = PATHS.reduce((sum, p) => sum + p.length, 0) / PATHS.length;
+const SHORTEST_PATH_LEN = Math.min(...PATHS.map(pathLengthToBase));
 
 function waveIncome(w: number): number {
   return BALANCE.incomeW1 + BALANCE.incomeStep * (w - 1);
@@ -65,10 +68,34 @@ function interpolate(anchors: [number, number][], x: number): number {
   return anchors[anchors.length - 1][1];
 }
 
-function waveShares(w: number): Shares {
-  const column = (index: number) =>
-    interpolate(WAVE_SHARE_ANCHORS.map((a) => [a[0], a[index]] as [number, number]), w);
-  return { basic: column(1), fast: column(2), tank: column(3), boss: column(4) };
+/** Skład faworyzuje wytrzymałe cele i uwzględnia DPS oraz czas potrzebny na ich ostrzał. */
+function enemyShares(w: number): Shares {
+  const weights = {} as Shares;
+  let total = 0;
+  for (const type of Object.keys(WAVE.groups) as GroupType[]) {
+    if (w < BALANCE.enemyStartWave[type]) {
+      weights[type] = 0;
+      continue;
+    }
+    let bestDps = 0;
+    for (const tower of TOWER_ORDER) {
+      if (!EFFECTIVENESS[type][tower]) continue;
+      const stats = TOWER_STATS[tower][0];
+      bestDps = Math.max(
+        bestDps,
+        (stats.damage * (DAMAGE_MULT[type]?.[tower] ?? 1)) / stats.fireRate,
+      );
+    }
+    const hp = enemyHpAtWave(type, w);
+    const speed = ENEMY_SPEED[type];
+    const weight = Math.sqrt(hp) / (bestDps * Math.sqrt(speed));
+    weights[type] = weight;
+    total += weight;
+  }
+  if (total > 0) {
+    for (const type of Object.keys(weights) as GroupType[]) weights[type] /= total;
+  }
+  return weights;
 }
 
 /** Złoto gracza po fali `w`: start + wypłaty fal + premie za ukończenie. */
@@ -79,22 +106,25 @@ function goldAfterWave(w: number): number {
 }
 
 function averageEnemyHp(w: number): number {
-  const sh = waveShares(w);
+  const shares = enemyShares(w);
   return (
-    (sh.basic * enemyHpAtWave('basic', w) +
-      sh.fast * enemyHpAtWave('fast', w) +
-      sh.tank * enemyHpAtWave('tank', w) +
-      sh.boss * enemyHpAtWave('boss', w)) /
-    100
+    shares.basic * enemyHpAtWave('basic', w) +
+    shares.fast * enemyHpAtWave('fast', w) +
+    shares.tank * enemyHpAtWave('tank', w) +
+    shares.boss * enemyHpAtWave('boss', w)
   );
 }
 
-function averageEnemySpeed(w: number): number {
-  const sh = waveShares(w);
-  const total = sh.basic + sh.fast + sh.tank + sh.boss;
-  if (total <= 0) return ENEMY_SPEED.basic;
+function averageEnemyTravelTime(w: number): number {
+  const shares = enemyShares(w);
+  const total = shares.basic + shares.fast + shares.tank + shares.boss;
+  if (total <= 0) return SHORTEST_PATH_LEN / ENEMY_SPEED.basic;
   return (
-    (sh.basic * ENEMY_SPEED.basic + sh.fast * ENEMY_SPEED.fast + sh.tank * ENEMY_SPEED.tank + sh.boss * ENEMY_SPEED.boss) /
+    (SHORTEST_PATH_LEN *
+      (shares.basic / ENEMY_SPEED.basic +
+        shares.fast / ENEMY_SPEED.fast +
+        shares.tank / ENEMY_SPEED.tank +
+        shares.boss / ENEMY_SPEED.boss)) /
     total
   );
 }
@@ -102,26 +132,41 @@ function averageEnemySpeed(w: number): number {
 /**
  * Budżet HP fali z ekonomii i realiów broni:
  *   budżet = wymagana trudność × (DMG na złoto) × (złoto gracza) × (czas fali).
- * Okno spawnu zależy od liczby wrogów, a liczba wrogów od budżetu — rozwiązanie iteracyjne
- * z uśrednianiem kolejnych kroków.
+ * Okno spawnu zależy od liczby wrogów i indywidualnych odstępów ich grup, a liczba
+ * wrogów od budżetu — rozwiązanie iteracyjne z uśrednianiem kolejnych kroków.
  */
 function waveHpBudgetModel(w: number): number {
   const leaderHp = leaderHpAt(w);
   const avgHp = averageEnemyHp(w);
-  const travel = AVG_PATH_LEN / Math.max(1, averageEnemySpeed(w));
+  const travel = averageEnemyTravelTime(w);
   const capacityPerSecond = BALANCE.dmgPerGold * goldAfterWave(w);
   const difficulty = interpolate(BALANCE.difficultyAnchors, w);
+  const shares = enemyShares(w);
 
   let count = Math.max(
     WAVE.minEnemies,
     Math.round((capacityPerSecond * (travel * BALANCE.timeFactor) * difficulty) / Math.max(1, avgHp)),
   );
   let budget = count * avgHp + leaderHp;
-  const groups = WAVE.modelIntervals.length;
+  const types: GroupType[] = ['basic', 'fast', 'tank', 'boss'];
+  const early = w <= WAVE.earlyUntil;
   for (let i = 0; i < WAVE.modelIterations; i++) {
     let spawnWindow = 0;
-    for (let g = 0; g < groups; g++) {
-      spawnWindow = Math.max(spawnWindow, g * WAVE.modelDelayStep + (count / groups / 2) * WAVE.modelIntervals[g]);
+    for (const type of types) {
+      const params = WAVE.groups[type];
+      if (w < BALANCE.enemyStartWave[type]) continue;
+      const share = shares[type];
+      const groupCount = Math.max(params.min, Math.round(count * share));
+      const interval = early ? params.earlyInterval : params.interval;
+      spawnWindow = Math.max(spawnWindow, params.delay + Math.max(0, groupCount - 1) * interval);
+    }
+    if (leaderHp > 0) {
+      const boss = WAVE.groups.boss;
+      const bossCount = Math.max(boss.min, Math.round(count * shares.boss));
+      spawnWindow = Math.max(
+        spawnWindow,
+        boss.delay + bossCount * (early ? boss.earlyInterval : boss.interval),
+      );
     }
     const duration = (spawnWindow / 1000 + travel) * BALANCE.timeFactor;
     const nextCount = Math.max(
@@ -167,32 +212,42 @@ function waveEnemyTotal(w: number, leaderHp: number): number {
 let bossHpWave10 = 0;
 let megaBossHp = 0;
 
-function buildWave(w: number): Wave {
+function buildWave(w: number, previousCounts: Record<EnemyType, number>): Wave {
   const groups: WaveGroup[] = [];
   const early = w <= WAVE.earlyUntil;
-  const shares = waveShares(w);
+  const shares = enemyShares(w);
+  const bossStart = BALANCE.enemyStartWave.boss;
+  const bossCountLocked = w > bossStart && (w - bossStart) % 5 !== 0;
+  if (bossCountLocked) {
+    const nonBossShare = shares.basic + shares.fast + shares.tank;
+    shares.basic /= nonBossShare;
+    shares.fast /= nonBossShare;
+    shares.tank /= nonBossShare;
+    shares.boss = 0;
+  }
   const leaderHp = leaderHpAt(w);
   const total = waveEnemyTotal(w, leaderHp);
 
   const add = (type: GroupType, share: number) => {
     const params = WAVE.groups[type];
-    const count = Math.max(params.min, Math.round((total * share) / 100));
-    if (count < 1) return;
+    const previousCount = previousCounts[type];
+    const targetCount = Math.max(params.min, previousCount, Math.round(total * share));
+    const introCap = type === 'basic' ? targetCount : w - BALANCE.enemyStartWave[type] + 1;
+    const count = Math.max(params.min, Math.min(targetCount, introCap));
+    const escortCount = type === 'boss' && leaderHp > 0 ? Math.max(0, count - 1) : count;
+    if (escortCount < 1) return;
     groups.push({
       config: { type, hp: enemyHpAtWave(type, w), speed: ENEMY_SPEED[type], gold: 1, damage: DAMAGE_BY_TYPE[type] },
-      count,
+      count: escortCount,
       interval: early ? params.earlyInterval : params.interval,
       burst: early ? 1 : params.burst,
       delay: params.delay,
     });
   };
 
-  if (w < BALANCE.finaleStart) {
-    add('basic', shares.basic);
-    if (shares.fast > 0.5) add('fast', shares.fast);
+  for (const type of Object.keys(WAVE.groups) as GroupType[]) {
+    if (w >= BALANCE.enemyStartWave[type] || previousCounts[type] > 0) add(type, shares[type]);
   }
-  if (shares.tank > 0.5) add('tank', shares.tank);
-  if (shares.boss > 0.5) add('boss', shares.boss);
 
   const bonus = waveBonus(w);
   const killBudget = Math.max(1, waveIncome(w) - bonus);
@@ -205,10 +260,9 @@ function buildWave(w: number): Wave {
     const isMega = w === TOTAL_WAVES;
     if (w === WAVE.bossEvery) bossHpWave10 = leaderHp;
     if (isMega) megaBossHp = leaderHp;
-    groups.forEach((g, gi) => {
-      g.delay = WAVE.escortDelay + gi * WAVE.escortDelayStep;
-    });
     const type: EnemyType = isMega ? 'megaboss' : 'boss';
+    const bossEscorts = groups.find((group) => group.config.type === 'boss');
+    const delay = WAVE.groups.boss.delay + (bossEscorts?.count ?? 0) * WAVE.groups.boss.interval;
     groups.push({
       config: {
         type,
@@ -220,7 +274,7 @@ function buildWave(w: number): Wave {
       count: 1,
       interval: 1000,
       burst: 1,
-      delay: 0,
+      delay,
     });
   }
 
@@ -234,15 +288,26 @@ function waveTotalHp(wave: Wave): number {
 /** Komplet fal; żadna fala nie jest słabsza od poprzedniej (+2%). */
 function buildAllWaves(): Wave[] {
   const waves: Wave[] = [];
+  const previousCounts: Record<EnemyType, number> = {
+    basic: 0,
+    fast: 0,
+    tank: 0,
+    boss: 0,
+    megaboss: 0,
+  };
   let previousHp = 0;
   for (let w = 1; w <= TOTAL_WAVES; w++) {
-    const wave = buildWave(w);
+    const wave = buildWave(w, previousCounts);
     let totalHp = waveTotalHp(wave);
     const minimum = Math.round(previousHp * WAVE.minGrowth);
     const basic = wave.groups.find((g) => g.config.type === 'basic');
     if (totalHp < minimum && basic && basic.config.hp > 0) {
       basic.count += Math.ceil((minimum - totalHp) / basic.config.hp);
       totalHp = waveTotalHp(wave);
+    }
+    for (const type of ENEMY_ORDER) previousCounts[type] = 0;
+    for (const group of wave.groups) {
+      previousCounts[group.config.type] += group.count;
     }
     previousHp = totalHp;
     waves.push(wave);

@@ -68,6 +68,12 @@ function buildPath(id: string, coords: [number, number][]): LanePath {
 
 export const PATHS: LanePath[] = Object.entries(LANE_ROUTES).map(([id, coords]) => buildPath(id, coords));
 
+/** Dystans do bazy; odcinek za krawędzią planszy nie jest przebyty, bo wróg trafia do bazy przy x > GAME_W. */
+export function pathLengthToBase(path: LanePath): number {
+  const end = path.points[path.points.length - 1];
+  return path.length - Math.max(0, end.x - GAME_W);
+}
+
 export function getPathById(id: string): LanePath {
   return PATHS.find((p) => p.id === id) ?? PATHS[0];
 }
