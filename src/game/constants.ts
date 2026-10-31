@@ -520,7 +520,7 @@ export const ENEMY_VIEW: Record<
 };
 
 /** Bazowe prędkości (px/s); rzeczywista prędkość skaluje się długością trasy do bazy. */
-export const ENEMY_SPEED: Record<EnemyType, number> = { basic: 100, fast: 135, tank: 70, boss: 70, megaboss: 70 };
+export const ENEMY_SPEED: Record<EnemyType, number> = { basic: 110, fast: 135, tank: 90, boss: 70, megaboss: 50 };
 /** Ile żyć bazy zabiera wróg, który dotrze do końca drogi. */
 export const DAMAGE_BY_TYPE: Record<EnemyType, number> = { basic: 5, fast: 3, tank: 10, boss: 20, megaboss: 25 };
 
